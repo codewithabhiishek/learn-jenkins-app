@@ -16,14 +16,21 @@ pipeline {
                     npm ci 
                     npm run build
                     ls -la
-                    
                 '''
             }
         }
 
-        stage('test'){
-            steps{
-                echo 'test -f build/index.html'
+        stage('test') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                }
+            }
+            steps {
+                sh '''
+                    test -f build/index.html
+                    npm test
+                '''
             }
         }
     }
