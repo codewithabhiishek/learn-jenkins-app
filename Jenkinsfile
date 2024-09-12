@@ -2,41 +2,25 @@ pipeline {
     agent any
 
     stages {
-        stage('Parallel Tasks') {  // Adding a parent stage to encapsulate parallel stages
+        stage('Deploy') {
             parallel {
                 stage('Build') {
                     agent {
                         docker {
                             image 'node:18-alpine'
+                            reuseNode true
                         }
                     }
                     steps {
-                        sh '''
-                            ls -la
-                            node --version
-                            npm --version
-                            npm ci 
-                            npm run build
-                            ls -la
-                        '''
-                    }
-                }
-
-                stage('E2E') {
-                    agent {
-                        docker {
-                            image 'mcr.microsoft.com/playwright:v1.47.0-noble'
+                        script {
+                            sh '''
+                            npm install -g netlify-cli
+                            netlify --version
+                            '''
                         }
                     }
-                    steps {
-                        sh '''
-                            npm install -g serve
-                            serve -s build &
-                            sleep 10
-                            npx playwright test
-                        '''
-                    }
                 }
+                // Add other parallel stages here if needed
             }
         }
     }
