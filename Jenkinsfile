@@ -19,10 +19,21 @@ pipeline {
                     steps {
                         script {
                             sh '''
+                            # Install dependencies
                             npm install -g netlify-cli
+
+                            # Verify the Netlify CLI version
                             netlify --version
+
+                            # Build the project
+                            npm install
+                            npm run build
+
+                            # Check deployment status
                             echo "Deploying to production, Site ID: $NETLIFY_SITE_ID"
                             netlify status
+
+                            # Deploy to Netlify
                             netlify deploy --dir=build --prod
                             '''
                         }
