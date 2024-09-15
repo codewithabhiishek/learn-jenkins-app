@@ -7,39 +7,57 @@ pipeline {
     }
 
     stages {
-        stage('Deploy!') {
-            parallel {
-                stage('Build') {
-                    agent {
-                        docker {
-                            image 'node:18-alpine'
-                            reuseNode true
-                        }
-                    }
-                    steps {
-                        script {
-                            sh '''
-                            # Install dependencies
-                            npm install -g netlify-cli
-
-                            # Verify the Netlify CLI version
-                            netlify --version
-
-                            # Build the project
-                            npm install
-                            npm run build
-
-                            # Check deployment status
-                            echo "Deploying to production, Site ID: $NETLIFY_SITE_ID"
-                            netlify status
-
-                            # Deploy to Netlify
-                            netlify deploy --dir=build --prod
-                            '''
-                        }
-                    }
+        stage('Build') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    reuseNode true
                 }
-                // Add other parallel stages here if needed
+            }
+            steps {
+                script {
+                    sh '''
+                    # Install dependencies
+                    npm install -g netlify-cli
+
+                    # Verify the Netlify CLI version
+                    netlify --version
+
+                    # Build the project
+                    npm install
+                    npm run build
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to Staging') {
+            steps {
+                script {
+                    sh '''
+                    # Check deployment status
+                    echo "Deploying to staging environment, Site ID: $NETLIFY_SITE_ID"
+                    netlify status
+
+                    # Deploy to Netlify in staging mode
+                    netlify deploy --dir=build --message="Staging deployment" --alias=staging
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to Production') {
+            steps {
+                script {
+                    sh '''
+                    # Check deployment status
+                    echo "Deploying to production, Site ID: $NETLIFY_SITE_ID"
+                    netlify status
+
+                    # Deploy to Netlify in production mode
+                    netlify deploy --dir=build --prod
+                    '''
+                }
             }
         }
     }
