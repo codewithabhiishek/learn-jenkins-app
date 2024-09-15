@@ -32,6 +32,12 @@ pipeline {
         }
 
         stage('Deploy to Staging') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    reuseNode true
+                }
+            }
             steps {
                 script {
                     sh '''
@@ -40,13 +46,19 @@ pipeline {
                     netlify status
 
                     # Deploy to Netlify in staging mode
-                    netlify deploy --dir=build --message="Staging deployment" --alias=staging
+                    netlify deploy --dir=build --message="Staging deployment"
                     '''
                 }
             }
         }
 
         stage('Deploy to Production') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    reuseNode true
+                }
+            }
             steps {
                 script {
                     sh '''
