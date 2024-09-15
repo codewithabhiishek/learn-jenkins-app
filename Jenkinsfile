@@ -7,69 +7,75 @@ pipeline {
     }
 
     stages {
-        stage('Build') {
-            agent {
-                docker {
-                    image 'node:18-alpine'
-                    reuseNode true
-                }
-            }
-            steps {
-                script {
-                    sh '''
-                    # Install dependencies
-                    npm install -g netlify-cli
+        stage('Deploy-staging') {
+            parallel {
+                stage('Build') {
+                    agent {
+                        docker {
+                            image 'node:18-alpine'
+                            reuseNode true
+                        }
+                    }
+                    steps {
+                        script {
+                            sh '''
+                            # Install dependencies
+                            npm install -g netlify-cli
 
-                    # Verify the Netlify CLI version
-                    netlify --version
+                            # Verify the Netlify CLI version
+                            netlify --version
 
-                    # Build the project
-                    npm install
-                    npm run build
-                    '''
-                }
-            }
-        }
+                            # Build the project
+                            npm install
+                            npm run build
 
-        stage('Deploy to Staging') {
-            agent {
-                docker {
-                    image 'node:18-alpine'
-                    reuseNode true
-                }
-            }
-            steps {
-                script {
-                    sh '''
-                    # Check deployment status
-                    echo "Deploying to staging environment, Site ID: $NETLIFY_SITE_ID"
-                    netlify status
+                            # Check deployment status
+                            echo "Deploying to staging, Site ID: $NETLIFY_SITE_ID"
+                            netlify status
 
-                    # Deploy to Netlify in staging mode
-                    netlify deploy --dir=build --message="Staging deployment"
-                    '''
+                            # Deploy to Netlify
+                            netlify deploy --dir=build 
+                            '''
+                        }
+                    }
                 }
+                // Add other parallel stages here if needed
             }
         }
 
-        stage('Deploy to Production') {
-            agent {
-                docker {
-                    image 'node:18-alpine'
-                    reuseNode true
-                }
-            }
-            steps {
-                script {
-                    sh '''
-                    # Check deployment status
-                    echo "Deploying to production, Site ID: $NETLIFY_SITE_ID"
-                    netlify status
+        stage('Deploy-production') {
+            parallel {
+                stage('Build') {
+                    agent {
+                        docker {
+                            image 'node:18-alpine'
+                            reuseNode true
+                        }
+                    }
+                    steps {
+                        script {
+                            sh '''
+                            # Install dependencies
+                            npm install -g netlify-cli
 
-                    # Deploy to Netlify in production mode
-                    netlify deploy --dir=build --prod
-                    '''
+                            # Verify the Netlify CLI version
+                            netlify --version
+
+                            # Build the project
+                            npm install
+                            npm run build
+
+                            # Check deployment status
+                            echo "Deploying to production, Site ID: $NETLIFY_SITE_ID"
+                            netlify status
+
+                            # Deploy to Netlify
+                            netlify deploy --dir=build --prod
+                            '''
+                        }
+                    }
                 }
+                // Add other parallel stages here if needed
             }
         }
     }
