@@ -42,6 +42,11 @@ pipeline {
                 // Add other parallel stages here if needed
             }
         }
+        stage('approval') {
+            steps {
+                input 'Ready to deploy?'
+            }
+        }
 
         stage('Deploy-production') {
             parallel {
